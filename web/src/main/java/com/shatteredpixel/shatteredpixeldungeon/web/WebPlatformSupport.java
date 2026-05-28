@@ -67,6 +67,53 @@ class WebPlatformSupport extends PlatformSupport {
 		// Browser chrome and canvas sizing are controlled by the generated web shell.
 	}
 
+	static void syncCanvasSize() {
+		syncCanvasSize("canvas");
+	}
+
+	@JSBody(params = {"canvasId"}, script =
+			"var doc = document.documentElement;\n" +
+			"var canvas = document.getElementById(canvasId);\n" +
+			"var viewport = window.visualViewport;\n" +
+			"var width = viewport && viewport.width ? viewport.width : window.innerWidth || doc.clientWidth || screen.width || 1;\n" +
+			"var height = viewport && viewport.height ? viewport.height : window.innerHeight || doc.clientHeight || screen.height || 1;\n" +
+			"var nav = navigator || {};\n" +
+			"var ua = nav.userAgent || '';\n" +
+			"var platform = nav.platform || '';\n" +
+			"var maxTouch = nav.maxTouchPoints || nav.msMaxTouchPoints || 0;\n" +
+			"var mobileLike = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua) || (platform === 'MacIntel' && maxTouch > 1);\n" +
+			"var type = screen.orientation && screen.orientation.type ? screen.orientation.type : '';\n" +
+			"var angle = typeof window.orientation === 'number' ? window.orientation : (screen.orientation && typeof screen.orientation.angle === 'number' ? screen.orientation.angle : 0);\n" +
+			"var normalizedAngle = Math.abs(angle) % 180;\n" +
+			"var physicalLandscape = mobileLike && (type.indexOf('landscape') >= 0 || normalizedAngle === 90);\n" +
+			"var physicalPortrait = mobileLike && (type.indexOf('portrait') >= 0 || normalizedAngle === 0);\n" +
+			"if (physicalLandscape && height > width) {\n" +
+			"    var landWidth = Math.max(width, height, screen.width || 0, screen.height || 0);\n" +
+			"    var landHeight = Math.min(width, height, screen.width || width, screen.height || height);\n" +
+			"    width = landWidth;\n" +
+			"    height = landHeight;\n" +
+			"} else if (physicalPortrait && width > height) {\n" +
+			"    var portWidth = Math.min(width, height, screen.width || width, screen.height || height);\n" +
+			"    var portHeight = Math.max(width, height, screen.width || 0, screen.height || 0);\n" +
+			"    width = portWidth;\n" +
+			"    height = portHeight;\n" +
+			"}\n" +
+			"width = Math.max(1, Math.round(width));\n" +
+			"height = Math.max(1, Math.round(height));\n" +
+			"doc.style.setProperty('--spd-viewport-width', width + 'px');\n" +
+			"doc.style.setProperty('--spd-viewport-height', height + 'px');\n" +
+			"if (canvas) {\n" +
+			"    if (canvas.width !== width) canvas.width = width;\n" +
+			"    if (canvas.height !== height) canvas.height = height;\n" +
+			"    canvas.style.width = width + 'px';\n" +
+			"    canvas.style.height = height + 'px';\n" +
+			"    if (canvas.parentElement) {\n" +
+			"        canvas.parentElement.style.width = width + 'px';\n" +
+			"        canvas.parentElement.style.height = height + 'px';\n" +
+			"    }\n" +
+			"}")
+	private static native void syncCanvasSize(String canvasId);
+
 	@Override
 	public boolean connectedToUnmeteredNetwork() {
 		return true;
