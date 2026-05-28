@@ -21,7 +21,6 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.web;
 
-import com.github.xpenatan.gdx.teavm.backends.web.WebApplication;
 import com.github.xpenatan.gdx.teavm.backends.web.WebApplicationConfiguration;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.News;
 import com.shatteredpixel.shatteredpixeldungeon.services.news.NewsImpl;
@@ -48,6 +47,6 @@ public class WebLauncher {
 		config.showDownloadLogs = true;
 		config.preloadListener = assetLoader -> assetLoader.loadScript("freetype.js");
 
-		new WebApplication(new WebGame(), config);
+		new WebApplicationWithPreloadedAudio(new WebGame(), config);
 	}
 }

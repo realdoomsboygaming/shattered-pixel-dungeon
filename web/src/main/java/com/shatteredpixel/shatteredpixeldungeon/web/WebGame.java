@@ -43,7 +43,6 @@ class WebGame extends ShatteredPixelDungeon {
 
 	@Override
 	public void create() {
-		WebPlatformSupport.syncCanvasSize();
 		SPDSettings.set(Gdx.app.getPreferences(SPDSettings.DEFAULT_PREFS_FILE));
 		FileUtils.setDefaultFileProperties(Files.FileType.Local, "");
 		// TeaVM's Deflater can fail in the browser; Bundle.read still accepts old gzip saves.
@@ -69,8 +68,6 @@ class WebGame extends ShatteredPixelDungeon {
 
 	@Override
 	public void render() {
-		WebPlatformSupport.syncCanvasSize();
-
 		if (pendingResize && !(scene instanceof GameScene && Actor.processing())) {
 			pendingResize = false;
 			super.resize(pendingResizeWidth, pendingResizeHeight);
