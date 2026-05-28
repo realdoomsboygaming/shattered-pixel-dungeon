@@ -43,6 +43,9 @@ public class DeviceCompat {
 	}
 
 	public static boolean isDesktop(){
+		if (isWebGL() && Game.platform != null) {
+			return Game.platform.isDesktopDevice();
+		}
 		return Gdx.app.getType() == ApplicationType.Desktop;
 	}
 
@@ -51,6 +54,9 @@ public class DeviceCompat {
 	}
 
 	public static boolean hasHardKeyboard(){
+		if (isWebGL() && Game.platform != null) {
+			return Game.platform.hasHardKeyboard();
+		}
 		return Gdx.input.isPeripheralAvailable(Input.Peripheral.HardwareKeyboard);
 	}
 	

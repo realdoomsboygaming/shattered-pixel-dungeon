@@ -27,6 +27,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.PixmapPacker;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.watabou.utils.PlatformSupport;
+import org.teavm.jso.JSBody;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +45,21 @@ class WebPlatformSupport extends PlatformSupport {
 	@Override
 	public boolean supportsFullScreen() {
 		return false;
+	}
+
+	@Override
+	public boolean isDesktopDevice() {
+		return !isMobileBrowser();
+	}
+
+	@Override
+	public boolean isMobileDevice() {
+		return isMobileBrowser();
+	}
+
+	@Override
+	public boolean hasHardKeyboard() {
+		return !isMobileBrowser();
 	}
 
 	@Override
@@ -144,4 +160,17 @@ class WebPlatformSupport extends PlatformSupport {
 			current.setLength(0);
 		}
 	}
+
+	@JSBody(script =
+			"var nav = window.navigator || {};\n" +
+			"var ua = nav.userAgent || '';\n" +
+			"var platform = nav.platform || '';\n" +
+			"var maxTouch = nav.maxTouchPoints || nav.msMaxTouchPoints || 0;\n" +
+			"var mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);\n" +
+			"var iPadOS = platform === 'MacIntel' && maxTouch > 1;\n" +
+			"var coarse = !!(window.matchMedia && window.matchMedia('(any-pointer: coarse)').matches);\n" +
+			"var noHover = !!(window.matchMedia && window.matchMedia('(hover: none)').matches);\n" +
+			"var shortSide = Math.min(window.innerWidth || screen.width || 0, window.innerHeight || screen.height || 0);\n" +
+			"return mobileUA || iPadOS || ((maxTouch > 0 || coarse) && noHover && shortSide <= 900);")
+	private static native boolean isMobileBrowser();
 }

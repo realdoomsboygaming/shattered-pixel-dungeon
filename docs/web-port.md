@@ -33,6 +33,8 @@ By default this serves the app on port `8080`. Override it with:
 - `WebPlatformSupport` provides browser-safe display, storage, vibration, and FreeType font support.
 - Browser settings and save data use libGDX local file/preferences backends.
 - Browser saves are written as uncompressed JSON because TeaVM's `Deflater` path can fail in the browser. Bundle loading still accepts existing gzip saves.
+- The generated web app includes PWA install metadata, home-screen icons, and a service worker for GitHub Pages/home-screen launch support.
+- WebGL uses browser device detection so desktop browsers get the large desktop-style UI while phone/tablet browsers get the mobile-optimized controls.
 - Web scene switches out of `GameScene` wait until actor processing is idle so browser resize callbacks do not hit TeaVM coroutine suspension points.
 - Vertex buffers reallocate when a partial tile update would exceed the currently allocated WebGL buffer.
 - Update/news services use the existing debug service modules for now.

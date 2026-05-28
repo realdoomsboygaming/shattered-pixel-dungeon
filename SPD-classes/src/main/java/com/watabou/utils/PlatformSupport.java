@@ -40,6 +40,18 @@ public abstract class PlatformSupport {
 		return true; //default
 	}
 
+	public boolean isDesktopDevice() {
+		return false;
+	}
+
+	public boolean isMobileDevice() {
+		return false;
+	}
+
+	public boolean hasHardKeyboard() {
+		return Gdx.input.isPeripheralAvailable(Input.Peripheral.HardwareKeyboard);
+	}
+
 	public static final int INSET_ALL = 3; //All insets, from hole punches to nav bars
 	public static final int INSET_LRG = 2; //Only big insets, full size notches and nav bars
 	public static final int INSET_BLK = 1; //only complete blocker assets like navbars
