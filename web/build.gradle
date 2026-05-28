@@ -1,0 +1,77 @@
+plugins {
+    id 'java-library'
+}
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+java.sourceCompatibility = java.targetCompatibility = appJavaCompatibility
+
+def generatedSrcDir = layout.buildDirectory.dir('generated/sources/webBuildConfig/java/main')
+
+sourceSets {
+    main {
+        java.srcDir generatedSrcDir
+    }
+}
+
+tasks.register('generateWebBuildConfig') {
+    inputs.property('appVersionName', appVersionName)
+    inputs.property('appVersionCode', appVersionCode)
+    outputs.dir(generatedSrcDir)
+
+    doLast {
+        def packageDir = generatedSrcDir.get().file('com/shatteredpixel/shatteredpixeldungeon/web').asFile
+        packageDir.mkdirs()
+        new File(packageDir, 'WebBuildConfig.java').text = """package com.shatteredpixel.shatteredpixeldungeon.web;
+
+final class WebBuildConfig {
+\tstatic final String VERSION_NAME = "${appVersionName}-INDEV";
+\tstatic final int VERSION_CODE = ${appVersionCode};
+
+\tprivate WebBuildConfig() {
+\t}
+}
+"""
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateWebBuildConfig')
+}
+
+dependencies {
+    implementation project(':core')
+
+    implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+    implementation "com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion"
+    implementation "com.github.xpenatan.gdx-teavm:gdx-freetype-teavm:$gdxTeaVMVersion"
+    implementation "com.github.xpenatan.gdx-teavm:gdx-controllers-teavm:$gdxTeaVMVersion"
+
+    implementation project(':services:updates:debugUpdates')
+    implementation project(':services:news:debugNews')
+}
+
+tasks.register('webBuild', JavaExec) {
+    group = 'teavm'
+    description = 'Build the TeaVM JavaScript web app.'
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.shatteredpixel.shatteredpixeldungeon.web.BuildWeb'
+    args 'build',
+            layout.buildDirectory.dir('dist').get().asFile.absolutePath,
+            project(':core').file('src/main/assets').absolutePath,
+            project(':desktop').file('src/main/assets').absolutePath
+}
+
+tasks.register('webRun', JavaExec) {
+    group = 'teavm'
+    description = 'Build and serve the TeaVM JavaScript web app.'
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.shatteredpixel.shatteredpixeldungeon.web.BuildWeb'
+    args 'run',
+            layout.buildDirectory.dir('dist').get().asFile.absolutePath,
+            project(':core').file('src/main/assets').absolutePath,
+            project(':desktop').file('src/main/assets').absolutePath,
+            '8080'
+}

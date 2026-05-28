@@ -142,6 +142,7 @@ import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.particles.Emitter;
 import com.watabou.noosa.tweeners.Tweener;
 import com.watabou.utils.Callback;
+import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.GameMath;
 import com.watabou.utils.PlatformSupport;
 import com.watabou.utils.Point;
@@ -792,6 +793,14 @@ public class GameScene extends PixelScene {
 
 	public boolean waitForActorThread(int msToWait, boolean interrupt){
 		if (actorThread == null || !actorThread.isAlive()) {
+			return true;
+		}
+		if (DeviceCompat.isWebGL()) {
+			if (interrupt) {
+				Actor.keepActorThreadAlive = false;
+				actorThread.interrupt();
+				actorThread = null;
+			}
 			return true;
 		}
 		synchronized (actorThread) {

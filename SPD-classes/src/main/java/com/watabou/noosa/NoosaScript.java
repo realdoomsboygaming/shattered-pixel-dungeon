@@ -44,6 +44,8 @@ public class NoosaScript extends Script {
 	public Attribute aUV;
 	
 	private Camera lastCamera;
+	private static int immediateVertexBuffer = -1;
+	private static int immediateIndexBuffer = -1;
 	
 	public NoosaScript() {
 
@@ -75,24 +77,17 @@ public class NoosaScript extends Script {
 
 	public void drawElements( FloatBuffer vertices, ShortBuffer indices, int size ) {
 
-		((Buffer)vertices).position( 0 );
-		aXY.vertexPointer( 2, 4, vertices );
-
-		((Buffer)vertices).position( 2 );
-		aUV.vertexPointer( 2, 4, vertices );
+		bindImmediateVertices( vertices );
 
 		Quad.releaseIndices();
-		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, size, Gdx.gl20.GL_UNSIGNED_SHORT, indices );
+		bindImmediateIndices( indices );
+		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, size, Gdx.gl20.GL_UNSIGNED_SHORT, 0 );
 		Quad.bindIndices();
 	}
 
 	public void drawQuad( FloatBuffer vertices ) {
 
-		((Buffer)vertices).position( 0 );
-		aXY.vertexPointer( 2, 4, vertices );
-
-		((Buffer)vertices).position( 2 );
-		aUV.vertexPointer( 2, 4, vertices );
+		bindImmediateVertices( vertices );
 		
 		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, Quad.SIZE, Gdx.gl20.GL_UNSIGNED_SHORT, 0 );
 	}
@@ -117,13 +112,39 @@ public class NoosaScript extends Script {
 			return;
 		}
 
-		((Buffer)vertices).position( 0 );
-		aXY.vertexPointer( 2, 4, vertices );
-
-		((Buffer)vertices).position( 2 );
-		aUV.vertexPointer( 2, 4, vertices );
+		bindImmediateVertices( vertices );
 		
 		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, Quad.SIZE * size, Gdx.gl20.GL_UNSIGNED_SHORT, 0 );
+	}
+
+	private void bindImmediateVertices( FloatBuffer vertices ){
+		if (immediateVertexBuffer == -1){
+			immediateVertexBuffer = Gdx.gl.glGenBuffer();
+		}
+
+		((Buffer)vertices).position( 0 );
+		Gdx.gl.glBindBuffer( Gdx.gl.GL_ARRAY_BUFFER, immediateVertexBuffer );
+		Gdx.gl.glBufferData( Gdx.gl.GL_ARRAY_BUFFER, vertices.limit()*4, vertices, Gdx.gl.GL_DYNAMIC_DRAW );
+
+		aXY.vertexBuffer( 2, 4, 0 );
+		aUV.vertexBuffer( 2, 4, 2 );
+
+		Gdx.gl.glBindBuffer( Gdx.gl.GL_ARRAY_BUFFER, 0 );
+	}
+
+	private void bindImmediateIndices( ShortBuffer indices ){
+		if (immediateIndexBuffer == -1){
+			immediateIndexBuffer = Gdx.gl.glGenBuffer();
+		}
+
+		((Buffer)indices).position( 0 );
+		Gdx.gl.glBindBuffer( Gdx.gl.GL_ELEMENT_ARRAY_BUFFER, immediateIndexBuffer );
+		Gdx.gl.glBufferData( Gdx.gl.GL_ELEMENT_ARRAY_BUFFER, indices.limit()*2, indices, Gdx.gl.GL_DYNAMIC_DRAW );
+	}
+
+	public static void resetImmediateBuffers(){
+		immediateVertexBuffer = -1;
+		immediateIndexBuffer = -1;
 	}
 
 	public void drawQuadSet( Vertexbuffer buffer, int length, int offset ){

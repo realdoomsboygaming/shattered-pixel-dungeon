@@ -22,6 +22,7 @@
 package com.watabou.glwrap;
 
 import com.badlogic.gdx.Gdx;
+import com.watabou.utils.DeviceCompat;
 
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
@@ -32,6 +33,7 @@ public class Vertexbuffer {
 	private int id;
 	private FloatBuffer vertices;
 	private int updateStart, updateEnd;
+	private int allocatedBytes;
 
 	private static final ArrayList<Vertexbuffer> buffers = new ArrayList<>();
 
@@ -78,10 +80,23 @@ public class Vertexbuffer {
 		((Buffer)vertices).position(updateStart);
 		bind();
 
-		if (updateStart == 0 && updateEnd == vertices.limit()){
-			Gdx.gl.glBufferData(Gdx.gl.GL_ARRAY_BUFFER, vertices.limit()*4, vertices, Gdx.gl.GL_DYNAMIC_DRAW);
+		if (DeviceCompat.isWebGL()) {
+			((Buffer)vertices).position(0);
+			allocatedBytes = vertices.limit()*4;
+			Gdx.gl.glBufferData(Gdx.gl.GL_ARRAY_BUFFER, allocatedBytes, vertices, Gdx.gl.GL_DYNAMIC_DRAW);
+		} else if (updateStart == 0 && updateEnd == vertices.limit()){
+			allocatedBytes = vertices.limit()*4;
+			Gdx.gl.glBufferData(Gdx.gl.GL_ARRAY_BUFFER, allocatedBytes, vertices, Gdx.gl.GL_DYNAMIC_DRAW);
 		} else {
-			Gdx.gl.glBufferSubData(Gdx.gl.GL_ARRAY_BUFFER, updateStart*4, (updateEnd - updateStart)*4, vertices);
+			int updateOffset = updateStart*4;
+			int updateBytes = (updateEnd - updateStart)*4;
+			if (updateOffset + updateBytes > allocatedBytes) {
+				((Buffer)vertices).position(0);
+				allocatedBytes = vertices.limit()*4;
+				Gdx.gl.glBufferData(Gdx.gl.GL_ARRAY_BUFFER, allocatedBytes, vertices, Gdx.gl.GL_DYNAMIC_DRAW);
+			} else {
+				Gdx.gl.glBufferSubData(Gdx.gl.GL_ARRAY_BUFFER, updateOffset, updateBytes, vertices);
+			}
 		}
 
 		release();

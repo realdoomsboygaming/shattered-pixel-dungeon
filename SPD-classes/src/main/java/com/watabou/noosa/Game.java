@@ -112,6 +112,7 @@ public class Game implements ApplicationListener {
 		//refreshes texture and vertex data stored on the gpu
 		versionContextRef = Gdx.graphics.getGLVersion();
 		Blending.useDefault();
+		NoosaScript.resetImmediateBuffers();
 		TextureCache.reload();
 		Vertexbuffer.reload();
 	}
@@ -129,6 +130,7 @@ public class Game implements ApplicationListener {
 		if (versionContextRef != Gdx.graphics.getGLVersion()) {
 			versionContextRef = Gdx.graphics.getGLVersion();
 			Blending.useDefault();
+			NoosaScript.resetImmediateBuffers();
 			TextureCache.reload();
 			Vertexbuffer.reload();
 		}
@@ -154,20 +156,25 @@ public class Game implements ApplicationListener {
 			return;
 		}
 
-		if (justResumed){
-			justResumed = false;
-			if (DeviceCompat.isAndroid()) return;
+		processingRenderFrame = true;
+		try {
+			if (justResumed){
+				justResumed = false;
+				if (DeviceCompat.isAndroid()) return;
+			}
+
+			NoosaScript.get().resetCamera();
+			NoosaScriptNoLighting.get().resetCamera();
+			Gdx.gl.glDisable(Gdx.gl.GL_SCISSOR_TEST);
+			Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
+			draw();
+
+			Gdx.gl.glDisable( Gdx.gl.GL_SCISSOR_TEST );
+
+			step();
+		} finally {
+			processingRenderFrame = false;
 		}
-
-		NoosaScript.get().resetCamera();
-		NoosaScriptNoLighting.get().resetCamera();
-		Gdx.gl.glDisable(Gdx.gl.GL_SCISSOR_TEST);
-		Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
-		draw();
-
-		Gdx.gl.glDisable( Gdx.gl.GL_SCISSOR_TEST );
-		
-		step();
 	}
 	
 	@Override
@@ -302,12 +309,24 @@ public class Game implements ApplicationListener {
 		pw.flush();
 		Gdx.app.error("GAME", sw.toString());
 	}
+
+	private static boolean processingRenderFrame = false;
+	private static boolean processingRenderThreadCallback = false;
+
+	public static boolean processingRenderThread(){
+		return processingRenderFrame || processingRenderThreadCallback;
+	}
 	
 	public static void runOnRenderThread(Callback c){
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				c.call();
+				processingRenderThreadCallback = true;
+				try {
+					c.call();
+				} finally {
+					processingRenderThreadCallback = false;
+				}
 			}
 		});
 	}

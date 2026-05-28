@@ -417,31 +417,7 @@ public class InterlevelScene extends PixelScene {
 					
 					try {
 
-						Actor.fixTime();
-
-						switch (mode) {
-							case DESCEND:
-								descend();
-								break;
-							case ASCEND:
-								ascend();
-								break;
-							case CONTINUE:
-								restore();
-								break;
-							case RESURRECT:
-								resurrect();
-								break;
-							case RETURN:
-								returnTo();
-								break;
-							case FALL:
-								fall();
-								break;
-							case RESET:
-								reset();
-								break;
-						}
+						runInterlevelTask();
 						
 					} catch (Exception e) {
 						
@@ -459,6 +435,34 @@ public class InterlevelScene extends PixelScene {
 			thread.start();
 		}
 		waitingTime = 0f;
+	}
+
+	private void runInterlevelTask() throws IOException {
+		Actor.fixTime();
+
+		switch (mode) {
+			case DESCEND:
+				descend();
+				break;
+			case ASCEND:
+				ascend();
+				break;
+			case CONTINUE:
+				restore();
+				break;
+			case RESURRECT:
+				resurrect();
+				break;
+			case RETURN:
+				returnTo();
+				break;
+			case FALL:
+				fall();
+				break;
+			case RESET:
+				reset();
+				break;
+		}
 	}
 
 	private int dots = 0;
